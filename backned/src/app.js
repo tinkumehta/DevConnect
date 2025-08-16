@@ -20,7 +20,10 @@ app.use(morgan("dev"))
 
 // import routes
 
+import userRouter from './routes/user.routes.js'
 
+
+app.use("/api/v1/users", userRouter)
 
 
 
