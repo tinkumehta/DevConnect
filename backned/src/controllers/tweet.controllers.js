@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import {Tweet} from "../models/tweet.models.js"
-import { isValidObjectId } from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 
 const createTweet = asyncHandler (async (req, res) => {
   const {content} = req.body;
@@ -94,8 +94,165 @@ const deleteTweet = asyncHandler (async (req, res) => {
     )
 })
 
+const getUserTweet = asyncHandler (async (req, res) => {
+    const {userId} = req.params;
+
+    if (!isValidObjectId(userId)) {
+        throw new ApiError(400, "Invalid userId")
+    }
+
+    const tweet = await Tweet.aggregate([
+        {
+            $match : {
+                owner : new mongoose.Types.ObjectId(userId)
+            }
+        },
+        {
+            $lookup : {
+                from : "users",
+                localField : "owner",
+                foreignField : "_id",
+                as : "ownerDetails",
+                pipeline : [
+                    {
+                        $project : {
+                            username : 1,
+                            "avatar" : 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $lookup : {
+                from :"likes",
+                localField : "_id",
+                foreignField : "tweet",
+                as : "likeDetails",
+                pipeline : [
+                    {
+                        $project : {
+                            likedBy : 1,
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields : {
+                likeCount : {
+                    $size : "$likeDetails"
+                },
+                ownerDetails : {
+                    $first : "$ownerDetails"
+                },
+                isLiked : {
+                    $cond : {
+                        if : {$in : [req.user?._id, "$likeDetails.likedBy"]},
+                        then : true,
+                        else : false
+                    }
+                }
+            }
+        },
+        {
+            $sort : {
+                createdAt :-1
+            }
+        },
+        {
+            $project : {
+                content : 1,
+                ownerDetails : 1,
+                likeCount : 1,
+                createdAt : 1,
+                isLiked : 1,
+            }
+        }
+    ])
+
+    return res
+    .status(201)
+    .json(
+        new ApiResponse(201, tweet, "Tweet fetched successfully")
+    )
+})
+
+const getAllTweets = asyncHandler (async (req, res) => {
+    const tweets = await Tweet.aggregate([
+        {
+            $lookup : {
+                from : "users",
+                localField : "owner",
+                foreignField : "_id",
+                as : "ownerDetails",
+                pipeline : [
+                    {
+                        $project : {
+                            username : 1,
+                            fullName : 1,
+                            "avatar" : 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $lookup : {
+                from : "likes",
+                localField : "_id",
+                foreignField : "tweet",
+                as : "likeDetails",
+            }
+        },
+        {
+            $addFields : {
+                likeCount : {
+                    $size : "$likeDetails"
+                },
+                ownerDetails : {
+                    $first : "$ownerDetails"
+                },
+                isLiked : {
+                    $cond : {
+                        if : {$in : [req.user?._id, "$likeDetails.likedBy"]},
+                        then : true,
+                        else : false
+                    }
+                },
+            }
+        },
+        {
+            $sort : {
+                createdAt : -1
+            }
+        },
+        {
+            $project : {
+                content : 1,
+                createdAt : 1,
+                ownerDetails : 1,
+                likeCount : 1,
+                isLiked : 1
+            }
+        }
+    ])
+
+    if (!tweets) {
+        throw new ApiError(500, "Failed to show tweet")
+    }
+
+    return res
+    .status(201)
+    .json(
+        new ApiResponse (201, tweets, "All tweets fetched successfully")
+    )
+})
+
 export {
     createTweet,
     updatedTweet,
-    deleteTweet
+    deleteTweet,
+    getUserTweet,
+    getAllTweets,
 }
