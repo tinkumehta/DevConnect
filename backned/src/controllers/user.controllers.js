@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/users.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -161,9 +162,200 @@ const logout = asyncHandler (async (req, res) => {
      )
 })
 
+const getCurrentUser = asyncHandler(async (req, res) => {
+    return res
+    .status(201)
+    .json (
+        new ApiResponse(201, req.user, "User fetched successfully")
+    )
+})
+
+const followUser = asyncHandler(async (req, res) => {
+    const targetUserId = req.params.id;
+    const currentUserId = req.user._id;
+
+    if (targetUserId.toString() === currentUserId.toString()) {
+        throw new ApiError(400, "user id is same")
+    }
+
+    const targetUser = await User.findById(targetUserId);
+    const currentUser = await User.findById(currentUserId);
+
+    if (!(targetUser || !currentUser)) {
+        throw new ApiError(400, "User not found")
+    }
+
+    // already following
+    if (currentUser.following.includes(targetUserId)) {
+        throw new ApiError(400, "User already following")
+    }
+
+    currentUser.following.push(targetUserId)
+    targetUser.followers.push(currentUserId)
+
+    await currentUser.save();
+    await targetUser.save();
+
+    return res
+    .status(201)
+    .json(
+        new ApiResponse(201, {}, "followed successfully")
+    )
+})
+
+const unfollowUser = asyncHandler(async (req, res) => {
+    const targetUserId = req.params.id;
+    const currentUserId = req.user._id;
+
+    if (targetUserId.toString() === currentUserId.toString()) {
+        throw new ApiError(400, "user id is same")
+    }
+
+    const targetUser = await User.findById(targetUserId);
+    const currentUser = await User.findById(currentUserId);
+
+    currentUser.following = currentUser.following.filter(
+        (id) =>  id.toString() !== targetUserId.toString()
+     );
+
+    targetUser.followers = targetUser.followers.filter(
+        (id) => id.toString() !== currentUserId.toString()
+    );
+
+    await currentUser.save();
+    await targetUser.save();
+
+    return res
+    .status(201)
+    .json(
+        new ApiResponse(201, {}, "Un follow is successfully")
+    )
+
+})
+
+const getFollowersFollowing = asyncHandler(async (req, res) => {
+    const userId = req.params.id;
+
+    const userData = await User.aggregate([
+        {
+            $match : {
+                _id : new mongoose.Types.ObjectId(userId)
+            }
+        },
+        {
+            $lookup : {
+                from : "users",
+                localField : "followers",
+                foreignField : "_id",
+                as : "followersData"
+            }
+        },
+        {
+            $lookup : {
+                from : "users",
+                localField : "following",
+                foreignField : "_id",
+                as : "followingData"
+            }
+        },
+        {
+            $project : {
+                _id : 1,
+                followersCount : {
+                    $size : "$followersData"
+                },
+                followingData : {
+                    $size : "$followingData"
+                },
+                followers : {
+                    $map : {
+                        input : "$followersData",
+                        as : "f",
+                        in : {
+                            _id : "$$f._id",
+                            username : "$$f.username",
+                            avatar : "$$f.avatar"
+                        }
+                    }
+                },
+                following : {
+                    $map : {
+                        input : "$followingData",
+                        as : "f",
+                        in : {
+                            _id : "$$f._id",
+                            username : "$$f.username",
+                            avatar : "$$f.avatar"
+                        }
+                    }
+                },
+            },
+        },
+    ])
+
+    if (!userData) {
+        throw new ApiError(404, "User not found")
+    }
+
+    return res
+    .status(201)
+    .json(
+        new ApiResponse(201, userData[0], "Fetched followers and following")
+    )
+})
+
+const searchUser = asyncHandler(async (req, res) => {
+    const {query} = req.query;
+
+    if (!query) {
+        throw new ApiError(400, "Search query is required")
+    }
+
+    const users = await User.find({
+        username : {$regex : query, $options : "i"} // case-insenstive
+    }).select("username avatar")
+
+    return res
+    .status(201)
+    .json(
+        new ApiResponse(201, users, "User found successfully")
+    )
+})
+
+const suggestionUser = asyncHandler(async (req, res) => {
+    const currentUserId = req.user._id;
+
+    const currentUser = await User.findById(currentUserId);
+
+    if (!currentUser) {
+        throw new ApiError(400, "User is not valid")
+    }
+
+
+    const excludedUserIds = [...currentUser.following, currentUserId]
+
+    const suggestion = await User.find({
+        _id : {$nin : excludedUserIds}
+    }).select("username avatar").limit(4);
+
+    return res
+    .status(201)
+    .json(
+        new ApiResponse(201, suggestion, "Suggestion users fetched")
+    )
+
+})
+
+
 export {
     register,
     login,
     logout,
+    getCurrentUser,
+    followUser,
+    unfollowUser,
+    getFollowersFollowing,
+    searchUser,
+    suggestionUser,
     
 }
