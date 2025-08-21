@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { AuthContext } from '../../context/AuthContext'
 import axios from 'axios'
 import FollowButton from './FollowButton'
 
@@ -106,8 +105,28 @@ className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-no
             ))}
         </div>
       ) : query ? (
-        
+        <p className="text-center py-4 text-gray-500">No users found</p>
+      ) : (
+         <div className="text-center py-6">
+          <svg
+            className="mx-auto h-12 w-12 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1}
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+            />
+          </svg>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">Search for users</h3>
+          <p className="mt-1 text-sm text-gray-500">Find and connect with other users</p>
+        </div>
       )}
+      </div>
   )
 }
 
