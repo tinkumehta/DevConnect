@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 
 function Register() {
     const navigate = useNavigate();
-    const [register] = useContext(AuthContext);
+    const {register} = useContext(AuthContext);
 
     const [form, setForm] = useState({
         fullName : '',

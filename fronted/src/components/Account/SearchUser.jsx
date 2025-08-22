@@ -86,7 +86,7 @@ className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-no
                  alt={user.username}
                  className="w-10 h-10 rounded-full object-cover border-2 border-white shadow"
                   onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/40";
+                    e.target.src = "";
                   }}
                 />
                 <div>

@@ -57,7 +57,7 @@ function SuggestedUser() {
             </div>
           ))}
         </div>
-      ) : suggestions.length === 0 ? (
+      ) : susggestios.length === 0 ? (
         <div className="p-6 text-center">
           <svg
             className="mx-auto h-12 w-12 text-gray-400"
@@ -88,7 +88,7 @@ function SuggestedUser() {
                 alt={user.username}
                  className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
                     onError={(e) => {
-                      e.target.src = "https://via.placeholder.com/40";
+                      e.target.src = "";
                     }}
                   />
                   <div>

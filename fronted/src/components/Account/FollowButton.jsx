@@ -12,14 +12,14 @@ function FollowButton({ targetUserId, onFollowChange}) {
         if (!user) return;
 
         // optimistic update
-        SetUser(prev => ({
-            ...prev,
-            following : isFollowing
-                ? prev.following.filter(id => id !== targetUserId)
-                : [...prev.following, targetUserId],
-        }));
-        onFollowChange?.(!isFollowing);
-        setLoading(true);
+         SetUser(prev => ({
+      ...prev,
+      following: isFollowing
+        ? prev.following.filter(id => id !== targetUserId)
+        : [...prev.following, targetUserId],
+    }));
+    onFollowChange?.(!isFollowing);
+    setLoading(true);
         try {
             if (isFollowing) {
                 await axios.post(`/api/v1/users/unfollow/${targetUserId}`, {}, {
