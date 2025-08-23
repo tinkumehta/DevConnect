@@ -14,7 +14,7 @@ function TweetForm({onTweet, editingTweet, onCancel}) {
     e.preventDefault();
     try {
       if (editingTweet) {
-        const res = await axios.patch(`/api/v1/tweets/${editingTweet}`, {content});
+        const res = await axios.patch(`/api/v1/tweets/${editingTweet._id}`, {content});
         onTweet(res.data.data);
       } else{
         const res = await axios.post('/api/v1/tweets/', {content});
