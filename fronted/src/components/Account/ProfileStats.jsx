@@ -33,6 +33,9 @@ function ProfileStats() {
         };
 
         fetchStats();
+        return () => {
+            isMounted = false;
+        };
     }, [user._id, setStats, setIsLoading]);
 
     if (isLoading) {
