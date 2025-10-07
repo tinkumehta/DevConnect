@@ -40,7 +40,7 @@ export const AuthContext = createContext();
 
    const login = async (emailOrUsername, password) => {
     try {
-      const res = await axios.post(`${API}/api/v1/users/login`, {
+      const res = await axios.post(`https://dev-connect-109.vercel.app/api/v1/users/login`, {
         email: emailOrUsername.includes('@') ? emailOrUsername : undefined,
         username: !emailOrUsername.includes('@') ? emailOrUsername : undefined,
         password,
