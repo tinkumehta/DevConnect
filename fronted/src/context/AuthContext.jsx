@@ -1,6 +1,8 @@
 import { useContext, createContext, useEffect, useState } from "react";
 import axios from 'axios'
 import {useNavigate} from 'react-router-dom'
+import { API } from "./configer";
+
 
 export const AuthContext = createContext();
 
@@ -11,7 +13,7 @@ export const AuthContext = createContext();
 
     const getCurrentUser = async () => {
         try {
-            const res = await axios.get('/api/v1/users/current-user', {
+            const res = await axios.get(`${API}/api/v1/users/current-user`, {
                 headers : {
                     Authorization : `Bearer ${localStorage.getItem('token')}`,
                 },
@@ -29,7 +31,7 @@ export const AuthContext = createContext();
     }
 
     const register = async (formData) => {
-        const res = await axios.post('/api/v1/users/register', formData, {
+        const res = await axios.post(`${API}/api/v1/users/register`, formData, {
             headers : { 'Content-Type' : 'multipart/form-data'},
         });
       //  localStorage.setItem('token',res.data.data.token);
@@ -38,7 +40,7 @@ export const AuthContext = createContext();
 
    const login = async (emailOrUsername, password) => {
     try {
-      const res = await axios.post('/api/v1/users/login', {
+      const res = await axios.post(`${API}/api/v1/users/login`, {
         email: emailOrUsername.includes('@') ? emailOrUsername : undefined,
         username: !emailOrUsername.includes('@') ? emailOrUsername : undefined,
         password,
