@@ -31,7 +31,7 @@ export const AuthContext = createContext();
     }
 
     const register = async (formData) => {
-        const res = await axios.post(`${API}/api/v1/users/register`, formData, {
+        const res = await axios.post(`https://dev-connect-109.vercel.app//api/v1/users/register`, formData, {
             headers : { 'Content-Type' : 'multipart/form-data'},
         });
       //  localStorage.setItem('token',res.data.data.token);
