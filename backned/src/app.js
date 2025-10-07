@@ -25,6 +25,7 @@ import tweetRouter from "./routes/tweet.routes.js"
 import likeRouter from "./routes/like.routes.js"
 
 
+app.get("/", (req, res) => res.send("Tinku kumar"));
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/tweets", tweetRouter)
 app.use("/api/v1/likes", likeRouter)
