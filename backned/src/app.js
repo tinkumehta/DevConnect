@@ -7,7 +7,7 @@ const app = express ()
 
 app.use(
     cors({
-        origin : ['https://dev-connect-theta-seven.vercel.app/'],
+        origin : ['https://dev-connect-theta-seven.vercel.app/login'],
         credentials : true
     })
 )
