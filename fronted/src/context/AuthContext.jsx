@@ -11,21 +11,20 @@ export const AuthContext = createContext();
     const [loading, setLoading] = useState(true);
    const navigate = useNavigate();
 
-   const getCurrentUser = async () => {
-  try {
-    const res = await axios.get(`/api/v1/users/current-user`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-    SetUser(res.data.data);
-  } catch (error) {
-    SetUser(null);
-  } finally {
-    setLoading(false);
-  }
-};
-
+    const getCurrentUser = async () => {
+        try {
+            const res = await axios.get('/api/v1/users/current-user', {
+                headers : {
+                    Authorization : `Bearer ${localStorage.getItem('token')}`,
+                },
+            })
+            SetUser(res.data.data);
+        } catch (error) {
+            SetUser(null);
+        } finally{
+            setLoading(false);
+        }
+    };
 
     const refreshUser = async () => {
        await getCurrentUser();
