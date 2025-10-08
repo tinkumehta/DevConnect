@@ -11,47 +11,62 @@ export const AuthContext = createContext();
     const [loading, setLoading] = useState(true);
    const navigate = useNavigate();
 
-    const getCurrentUser = async () => {
-        try {
-            const res = await axios.get(`${API}/api/v1/users/current-user`, {
-                headers : {
-                    Authorization : `Bearer ${localStorage.getItem('token')}`,
-                },
-            })
-            SetUser(res.data.data);
-        } catch (error) {
-            SetUser(null);
-        } finally{
-            setLoading(false);
-        }
-    };
+   const getCurrentUser = async () => {
+  try {
+    const res = await axios.get(`/api/v1/users/current-user`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    SetUser(res.data.data);
+  } catch (error) {
+    SetUser(null);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     const refreshUser = async () => {
        await getCurrentUser();
     }
 
-    const register = async (formData) => {
-        const res = await axios.post(`https://dev-connect-109.vercel.app/api/v1/users/register`, formData, {
-            headers : { 'Content-Type' : 'multipart/form-data'},
-        });
-      //  localStorage.setItem('token',res.data.data.token);
-        await getCurrentUser();
-    };
+   const register = async (formData) => {
+  try {
+    const res = await axios.post(
+      `/api/v1/users/register`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
 
-   const login = async (emailOrUsername, password) => {
-    try {
-      const res = await axios.post(`https://dev-connect-109.vercel.app/api/v1/users/login`, {
-        email: emailOrUsername.includes('@') ? emailOrUsername : undefined,
-        username: !emailOrUsername.includes('@') ? emailOrUsername : undefined,
-        password,
-      });
+    // ✅ Save token after registration
+    localStorage.setItem('token', res.data.data.accessToken);
 
-      SetUser(res.data.data.user);
-      navigate('/'); // redirect after login
-    } catch (err) {
-      throw err.response?.data?.message || "Login failed";
-    }
-  };
+    await getCurrentUser();
+  } catch (error) {
+    console.error("Registration failed:", error.response?.data || error);
+  }
+};
+
+
+  const login = async (emailOrUsername, password) => {
+  try {
+    const res = await axios.post(`/api/v1/users/login`, {
+      email: emailOrUsername.includes('@') ? emailOrUsername : undefined,
+      username: !emailOrUsername.includes('@') ? emailOrUsername : undefined,
+      password,
+    });
+
+    // ✅ Save token in localStorage
+    localStorage.setItem('token', res.data.data.accessToken);
+
+    SetUser(res.data.data.user);
+    navigate('/'); // redirect after login
+  } catch (err) {
+    throw err.response?.data?.message || "Login failed";
+  }
+};
+
     const logout = async () => {
        try {
          await axios.post('/api/v1/users/logout');
