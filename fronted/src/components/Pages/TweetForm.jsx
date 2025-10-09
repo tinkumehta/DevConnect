@@ -14,11 +14,22 @@ function TweetForm({onTweet, editingTweet, onCancel}) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem("token");
       if (editingTweet) {
-        const res = await axios.patch(`${API}/api/v1/tweets/${editingTweet._id}`, {content});
+        const res = await axios.patch(`${API}/api/v1/tweets/${editingTweet._id}`, {content}, {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ send token in header
+        },
+        withCredentials: true, // ✅ allow cross-origin auth
+      });
         onTweet(res.data.data);
       } else{
-        const res = await axios.post(`${API}/api/v1/tweets/`, {content});
+        const res = await axios.post(`${API}/api/v1/tweets/`, {content}, {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ send token in header
+        },
+        withCredentials: true, // ✅ allow cross-origin auth
+      });
         onTweet(res.data.data);
       }
       setContent('');

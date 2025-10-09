@@ -22,10 +22,14 @@ function FollowButton({ targetUserId, onFollowChange}) {
     onFollowChange?.(!isFollowing);
     setLoading(true);
         try {
+            const token = localStorage.getItem("token");
             if (isFollowing) {
                 await axios.post(`${API}/api/v1/users/unfollow/${targetUserId}`, {}, {
-                    headers : {Authorization : `Bearer ${localStorage.getItem('token')}`}
-                });
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ send token in header
+        },
+        withCredentials: true, // ✅ allow cross-origin auth
+      });
             } else {
                 await axios.post(`${API}/api/v1/users/follow/${targetUserId}`, {}, {
                     headers : {Authorization : `Bearer ${localStorage.getItem('token')}`}

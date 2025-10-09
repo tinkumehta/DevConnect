@@ -5,10 +5,15 @@ const API = import.meta.env.VITE_API_URL;
 
 function TweetCard({tweet, onDelete, onEdit}) {
     const {user} = useContext(AuthContext);
-
     const handleDelete = async () => {
         try {
-            await axios.delete(`${API}/api/v1/tweets/${tweet._id}`)
+          const token = localStorage.getItem("token");
+            await axios.delete(`${API}/api/v1/tweets/${tweet._id}`,{
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ send token in header
+        },
+        withCredentials: true, // ✅ allow cross-origin auth
+      });
             onDelete(tweet._id);
         } catch (error) {
             console.error("Delete failed ", error);

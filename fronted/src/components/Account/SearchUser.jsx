@@ -23,10 +23,14 @@ function SearchUser() {
 
     const fetchSearchResults = async () => {
         try {
+          const token = localStorage.getItem("token");
             setIsLoading(true);
             const res = await axios.get(`${API}/api/v1/users/search?query=${query}`, {
-                headers : {Authorization : `Bearer ${localStorage.getItem('token')}`},
-            });
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ send token in header
+        },
+        withCredentials: true, // ✅ allow cross-origin auth
+      });
             setResults(res.data.data);
         } catch (error) {
             console.error("Search error", error)

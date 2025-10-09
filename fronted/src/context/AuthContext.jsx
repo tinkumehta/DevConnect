@@ -17,11 +17,22 @@ export const AuthContext = createContext();
     }
 
  const register = async (formData) => {
-  const res = await axios.post(`${API}/api/v1/users/register`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  await getCurrentUser();
+  try {
+    const res = await axios.post(`${API}/api/v1/users/register`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      withCredentials: true, // allow cookies if backend sets them
+    });
+    
+    // Save token if backend returns it
+    localStorage.setItem("token", res.data.data.accessToken);
+
+    await getCurrentUser();
+  } catch (err) {
+    console.error("Registration error:", err.response?.data || err.message);
+    throw err.response?.data?.message || "Registration failed";
+  }
 };
+
 
 const login = async (emailOrUsername, password) => {
   const res = await axios.post(`${API}/api/v1/users/login`, {
@@ -51,7 +62,13 @@ const getCurrentUser = async () => {
 
     const logout = async () => {
        try {
-         await axios.post(`${API}/api/v1/users/logout`);
+        const token = localStorage.getItem("token");
+         await axios.post(`${API}/api/v1/users/logout`,{}, {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ send token in header
+        },
+        withCredentials: true, // ✅ allow cross-origin auth
+      });
         SetUser(null);
         navigate('/login')
        } catch (error) {
