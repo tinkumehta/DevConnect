@@ -10,23 +10,28 @@ const AllTweets = () => {
   const [loading, setLoading] = useState(true);
 
  useEffect(() => {
-  const fetchAllTweets = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(`${API}/api/v1/tweets/all`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
-      setTweets(res.data.data);
-      // console.log(res.data.data);
-    } catch (err) {
-      console.error("Failed to load tweets", err);
-    } finally {
-      setLoading(false);
+  const fetchTweets = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found, user not logged in");
+      return; // stop here
     }
-  };
+
+    const res = await axios.get(`${API}/api/v1/tweets`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      withCredentials: true,
+    });
+
+    setTweets(res.data.data);
+  } catch (err) {
+    console.error("Failed to fetch tweets", err);
+  }
+};
+
 
   fetchAllTweets();
 }, []);
