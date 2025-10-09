@@ -7,7 +7,7 @@ const app = express ()
 
 app.use(
     cors({
-        origin : ['https://dev-connect-theta-seven.vercel.app/login'],
+        origin : ['https://dev-connect-theta-seven.vercel.app', 'http://localhost:5173'],
         credentials : true
     })
 )
@@ -31,4 +31,4 @@ app.use("/api/v1/tweets", tweetRouter)
 app.use("/api/v1/likes", likeRouter)
 
 
-export {app}
+export default app;
