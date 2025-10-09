@@ -1,7 +1,7 @@
 import { useContext, createContext, useEffect, useState } from "react";
 import axios from 'axios'
 import {useNavigate} from 'react-router-dom'
-import { API } from "./configer";
+const API = import.meta.env.VITE_API_URL;
 
 
 export const AuthContext = createContext();
@@ -11,64 +11,47 @@ export const AuthContext = createContext();
     const [loading, setLoading] = useState(true);
    const navigate = useNavigate();
 
-    const getCurrentUser = async () => {
-        try {
-            const res = await axios.get('/api/v1/users/current-user', {
-                headers : {
-                    Authorization : `Bearer ${localStorage.getItem('token')}`,
-                },
-            })
-            SetUser(res.data.data);
-        } catch (error) {
-            SetUser(null);
-        } finally{
-            setLoading(false);
-        }
-    };
 
     const refreshUser = async () => {
        await getCurrentUser();
     }
 
-   const register = async (formData) => {
-  try {
-    const res = await axios.post(
-      `/api/v1/users/register`,
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
-    );
-
-    // ✅ Save token after registration
-    localStorage.setItem('token', res.data.data.accessToken);
-
-    await getCurrentUser();
-  } catch (error) {
-    console.error("Registration failed:", error.response?.data || error);
-  }
+ const register = async (formData) => {
+  const res = await axios.post(`${API}/api/v1/users/register`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  await getCurrentUser();
 };
 
+const login = async (emailOrUsername, password) => {
+  const res = await axios.post(`${API}/api/v1/users/login`, {
+    email: emailOrUsername.includes("@") ? emailOrUsername : undefined,
+    username: !emailOrUsername.includes("@") ? emailOrUsername : undefined,
+    password,
+  });
 
-  const login = async (emailOrUsername, password) => {
+  SetUser(res.data.data.user);
+  navigate("/");
+};
+
+const getCurrentUser = async () => {
   try {
-    const res = await axios.post(`/api/v1/users/login`, {
-      email: emailOrUsername.includes('@') ? emailOrUsername : undefined,
-      username: !emailOrUsername.includes('@') ? emailOrUsername : undefined,
-      password,
+    const res = await axios.get(`${API}/api/v1/users/current-user`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
     });
-
-    // ✅ Save token in localStorage
-    localStorage.setItem('token', res.data.data.accessToken);
-
-    SetUser(res.data.data.user);
-    navigate('/'); // redirect after login
+    SetUser(res.data.data);
   } catch (err) {
-    throw err.response?.data?.message || "Login failed";
+    SetUser(null);
+  } finally {
+    setLoading(false);
   }
 };
 
     const logout = async () => {
        try {
-         await axios.post('/api/v1/users/logout');
+         await axios.post(`${API}/api/v1/users/logout`);
         SetUser(null);
         navigate('/login')
        } catch (error) {
