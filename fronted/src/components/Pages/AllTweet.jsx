@@ -33,7 +33,7 @@ const AllTweets = () => {
 };
 
 
-  fetchAllTweets();
+  fetchTweets();
 }, []);
 
 
