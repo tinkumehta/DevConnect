@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { AuthContext } from "../../context/AuthContext";
 import Hometweet from "../Pages/Hometweet";
+const API = import.meta.env.VITE_API_URL;
 
 function ProfileStats() {
     const [stats, setStats] = useState(null);
@@ -14,7 +15,7 @@ function ProfileStats() {
 
         const fetchStats = async () => {
             try {
-                const res = await axios.get(`/api/v1/users/follows/${user._id}`);
+                const res = await axios.get(`${API}/api/v1/users/follows/${user._id}`);
                
                 
                 if (isMounted) {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import FollowButton from './FollowButton'
+const API = import.meta.env.VITE_API_URL;
 
 function SearchUser() {
     const [query, setQuery] = useState("");
@@ -23,7 +24,7 @@ function SearchUser() {
     const fetchSearchResults = async () => {
         try {
             setIsLoading(true);
-            const res = await axios.get(`/api/v1/users/search?query=${query}`, {
+            const res = await axios.get(`${API}/api/v1/users/search?query=${query}`, {
                 headers : {Authorization : `Bearer ${localStorage.getItem('token')}`},
             });
             setResults(res.data.data);

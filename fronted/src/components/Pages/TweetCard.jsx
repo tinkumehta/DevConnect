@@ -1,14 +1,14 @@
 import React, { useContext } from 'react'
 import axios from 'axios'
 import { AuthContext } from '../../context/AuthContext'
-
+const API = import.meta.env.VITE_API_URL;
 
 function TweetCard({tweet, onDelete, onEdit}) {
     const {user} = useContext(AuthContext);
 
     const handleDelete = async () => {
         try {
-            await axios.delete(`/api/v1/tweets/${tweet._id}`)
+            await axios.delete(`${API}/api/v1/tweets/${tweet._id}`)
             onDelete(tweet._id);
         } catch (error) {
             console.error("Delete failed ", error);

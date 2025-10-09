@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import React from 'react'
+const API = import.meta.env.VITE_API_URL;
 
 function SuggestedUser() {
     const [susggestios, setSuggestions] = useState([]);
@@ -9,7 +10,7 @@ function SuggestedUser() {
     useEffect(() => {
         const fetchSuggestions = async () => {
             try {
-                const res = await axios.get('/api/v1/users/suggestions')
+                const res = await axios.get(`${API}/api/v1/users/suggestions`)
                 setSuggestions(res.data.data);
             } catch (error) {
                 console.error("Error fetching suggstions ", error)
@@ -22,7 +23,7 @@ function SuggestedUser() {
 
     const handleFollow = async (id) => {
         try {
-            await axios.post(`/api/v1/users/follow/${id}`);
+            await axios.post(`${API}/api/v1/users/follow/${id}`);
             setSuggestions((prev) => prev.filter((user) => user._id !== id))
         } catch (error) {
             console.error("Error following user:", error)

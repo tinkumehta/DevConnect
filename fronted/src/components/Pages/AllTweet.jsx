@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-
+const API = import.meta.env.VITE_API_URL;
 dayjs.extend(relativeTime);
 
 const AllTweets = () => {
@@ -12,7 +12,7 @@ const AllTweets = () => {
   useEffect(() => {
     const fetchAllTweets = async () => {
       try {
-        const res = await axios.get("/api/v1/tweets/all");
+        const res = await axios.get(`${API}/api/v1/tweets/all`);
         setTweets(res.data.data);
        // console.log(res.data.data);
         
@@ -63,7 +63,7 @@ const TweetCard = ({ tweet }) => {
 
   const handleLikeToggle = async () => {
     try {
-      const res = await axios.post(`/api/v1/likes/toggle/t/${tweet._id}`);
+      const res = await axios.post(`${API}/api/v1/likes/toggle/t/${tweet._id}`);
       const liked = res.data.data.likedBy;
       setAnimate(true);
       setTimeout(() => setAnimate(false), 300);
