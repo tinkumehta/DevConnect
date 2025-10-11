@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import React from 'react'
-const API = import.meta.env.VITE_API_URL;
+//const API = import.meta.env.VITE_API_URL;
 
 function SuggestedUser() {
     const [susggestios, setSuggestions] = useState([]);
@@ -11,7 +11,7 @@ function SuggestedUser() {
         const fetchSuggestions = async () => {
             try {
               const token = localStorage.getItem("token");
-                const res = await axios.get(`${API}/api/v1/users/suggestions`, {
+                const res = await axios.get(`/api/v1/users/suggestions`, {
         headers: {
           Authorization: `Bearer ${token}`, // ✅ send token in header
         },

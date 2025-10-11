@@ -2,40 +2,29 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-const API = import.meta.env.VITE_API_URL;
+
 dayjs.extend(relativeTime);
 
 const AllTweets = () => {
   const [tweets, setTweets] = useState([]);
   const [loading, setLoading] = useState(true);
 
- useEffect(() => {
-  const fetchTweets = async () => {
-  try {
-    const token = localStorage.getItem("token");
+  useEffect(() => {
+    const fetchAllTweets = async () => {
+      try {
+        const res = await axios.get("/api/v1/tweets/all");
+        setTweets(res.data.data);
+       // console.log(res.data.data);
+        
+      } catch (err) {
+        console.error("Failed to load tweets", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (!token) {
-      console.error("No token found, user not logged in");
-      return; // stop here
-    }
-
-    const res = await axios.get(`${API}/api/v1/tweets`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      withCredentials: true,
-    });
-
-    setTweets(res.data.data);
-  } catch (err) {
-    console.error("Failed to fetch tweets", err);
-  }
-};
-
-
-  fetchTweets();
-}, []);
-
+    fetchAllTweets();
+  }, []);
 
   if (loading) return (
     <div className="flex justify-center items-center h-64">
@@ -68,42 +57,24 @@ const AllTweets = () => {
 };
 
 const TweetCard = ({ tweet }) => {
-  const [likesCount, setLikesCount] = useState();
+  const [likesCount, setLikesCount] = useState(tweet.likeCount || 0);
   const [isLiked, setIsLiked] = useState(tweet.isLiked || false);
   const [animate, setAnimate] = useState(false);
+  //console.log(tweet);
   
+
   const handleLikeToggle = async () => {
-  try {
-    const token = localStorage.getItem("token");
-
-    // ✅ Correct axios syntax — send empty body, then config with headers
-    const res = await axios.post(
-      `${API}/api/v1/likes/toggle/t/${tweet._id}`,
-      {}, // empty body (POST requires a body)
-      {
-        headers: {
-          Authorization: `Bearer ${token}`, // ✅ send token correctly
-        },
-        withCredentials: true, // ✅ allow cookies if needed
-      }
-    );
-    console.log(res.data.data);
-    //console.log(tweet.likeCount);
-    
-
-    const liked = res.data.data.likedBy;
-    console.log(liked);
-
-    setAnimate(true);
-    setTimeout(() => setAnimate(false), 300);
-    setIsLiked(liked);
-    setLikesCount((prev) => (liked ? prev + 1 : prev - 1));
-    
-  } catch (err) {
-    console.error("Error toggling like:", err);
-  }
-};
-
+    try {
+      const res = await axios.post(`/api/v1/likes/toggle/t/${tweet._id}`);
+      const liked = res.data.data.likedBy;
+      setAnimate(true);
+      setTimeout(() => setAnimate(false), 300);
+      setIsLiked(liked);
+      setLikesCount((prev) => (liked ? prev + 1 : prev - 1));
+    } catch (err) {
+      console.error("Error toggling like:", err);
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 p-5 border border-gray-100">
@@ -152,8 +123,7 @@ const TweetCard = ({ tweet }) => {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
-              <span className="text-sm">{tweet.likeCount}</span>
-              
+              <span className="text-sm">{likesCount}</span>
             </button>
 
             <button className="flex items-center gap-1 hover:text-blue-500 transition-colors">

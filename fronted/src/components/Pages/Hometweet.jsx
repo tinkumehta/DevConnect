@@ -4,7 +4,7 @@ import TweetCard from "./TweetCard";
 import TweetForm from "./TweetForm";
 import { AuthContext } from "../../context/AuthContext";
 
-const API = import.meta.env.VITE_API_URL;
+//const API = import.meta.env.VITE_API_URL;
 
 function Hometweet() {
   const [tweets, setTweets] = useState([]);
@@ -14,14 +14,14 @@ function Hometweet() {
   const fetchTweets = async () => {
     try {
       const token = localStorage.getItem("token"); // ✅ get saved token
-      const res = await axios.get(`${API}/api/v1/tweets/user/${user._id}`, {
+      const res = await axios.get(`/api/v1/tweets/user/${user._id}`, {
         headers: {
           Authorization: `Bearer ${token}`, // ✅ send token in header
         },
         withCredentials: true, // ✅ allow cross-origin auth
       });
       setTweets(res.data.data);
-      console.log(res.data.data);
+     // console.log(res.data.data);
     } catch (error) {
       console.error("Failed to fetch tweets", error);
     }
