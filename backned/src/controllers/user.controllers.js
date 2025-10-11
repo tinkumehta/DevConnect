@@ -21,138 +21,118 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 }
 
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
-import { User } from "../models/user.model.js";
-import { generateAccessAndRefreshToken } from "../utils/token.js"; // ✅ ensure you have this helper
+const register = asyncHandler (async (req, res) => {
+    // get all user details for fronted
+    // validation - not empty
+    // check user already register
+    // check image and avatar 
+    // upload them to cloudinary , avatar
+    // create user object - create entery in db
+    // check user creation 
+    // return res
 
-export const register = asyncHandler(async (req, res) => {
-  const { fullName, username, email, password } = req.body;
+    const {username, email, password,  fullName} = req.body
 
-  // 1️⃣ Validate input fields
-  if ([fullName, email, username, password].some((field) => !field?.trim())) {
-    throw new ApiError(400, "All fields are required");
-  }
+    if (
+        [username, email, password, fullName].some((field) => field?.trim() === "")
+    ) {
+        throw new  ApiError(401, "All field are required")
+    }
 
-  // 2️⃣ Check existing user
-  const existingUser = await User.findOne({
-    $or: [{ email }, { username }],
-  });
+    const existedUser = await User.findOne({
+        $or : [{username}, {email}]
+    })
 
-  if (existingUser) {
-    throw new ApiError(400, "User already registered");
-  }
+    if (existedUser) {
+        throw new ApiError(400, "User is allready exits")
+    }
 
-  // 3️⃣ Handle file uploads
-  const avatarLocalPath = req.files?.avatar?.[0]?.path;
-  let coverImageLocalPath =
-    req.files?.coverImage?.[0]?.path || undefined;
+    const avatarLocalPath = req.files?.avatar[0]?.path;
 
-  if (!avatarLocalPath) {
-    throw new ApiError(400, "Avatar file is required");
-  }
+    let coverImageLocalPath;
 
-  const avatar = await uploadOnCloudinary(avatarLocalPath);
-  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path;
+    }
 
-  if (!avatar) {
-    throw new ApiError(500, "Failed to upload avatar");
-  }
+    if (!avatarLocalPath) {
+        throw new ApiError(401, "Avatar file is required")
+    }
 
-  // 4️⃣ Create user
-  const user = await User.create({
-    fullName,
-    username: username.toLowerCase(),
-    email,
-    password,
-    avatar: avatar.url,
-    coverImage: coverImage?.url || "",
-  });
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
-  const createdUser = await User.findById(user._id).select(
-    "-password -refreshToken"
-  );
+    if (!avatar) {
+        throw new ApiError(500, "Failed to upload")
+    }
 
-  if (!createdUser) {
-    throw new ApiError(500, "Failed to create user");
-  }
+    const user = await User.create({
+        fullName,
+        username : username.toLowerCase(),
+        email,
+        password,
+        avatar : avatar.url,
+        coverImage : coverImage?.url || "",
+    })
 
-  // 5️⃣ Generate tokens
-  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
-    createdUser._id
-  );
+    const createdUser = await User.findById(user._id).select("-password -refreshToken")
 
-  // 6️⃣ Send cookies (same as login)
-  const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-  };
+    if (!createdUser) {
+        throw new ApiError(500, "Something went wrong for register user")
+    }
 
-  return res
-    .status(201)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+   
+   return res
+    .status(200)
     .json(
-      new ApiResponse(
-        201,
-        { user: createdUser, accessToken, refreshToken },
-        "User registered successfully"
-      )
-    );
-});
+        new ApiResponse(200, createdUser, "User created successfully")
+    )
+})
 
-
-const login = asyncHandler (async (req, res) => {
-    // user details
-    // check is empty
-    // user is exits
-    // access and refresh token
+const loginUser = asyncHandler(async (req, res) => {
+    // req body -> username, email, password
+    // find the user
+    // check password
+    // access and referesh token
     // send cookie
 
-    const {username, email, password} = req.body;
-     if (!(username) && !(email)) {
-        throw new ApiError(400, "username and email is required")
-     }
+    const {email, username, password} = req.body
 
-     const findUser = await User.findOne({
+    if(! (email) && ! (username)){
+        throw new ApiError(401, "email and username is required")
+    }
+
+    const user  = await User.findOne({
         $or : [{email}, {username}]
-     })
+    })
 
-     if (!findUser) {
-        throw new ApiError(400, "user is missing")
-     }
+    if (!user) {
+        throw new ApiError(400, "User does'nt exits")
+    }
 
-     const isPasswordCorrect = await findUser.isPasswordCorrect(password)
+    const isPasswordCorrect = await user.isPasswordCorrect(password)
 
-     if (!isPasswordCorrect) {
-        throw new ApiError(400, "Invalid password")
-     }
+    if (!isPasswordCorrect) {
+        throw new ApiError(401, "User password is not correcty")
+    }
 
-     const {accessToken, refreshToken} =await generateAccessAndRefreshToken(findUser._id)
-      
-     const loggedInUser = await User.findById(findUser._id).select("-password -refreshToken")
+    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
 
-     const options = {
-        httpOnly : true,
-        secure : true,
-        sameSite : "none",
-     }
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
-     return res
-     .status(201)
-     .cookie("accessToken",  accessToken, options)
-     .cookie("refershToken",  refreshToken, options)
-     .json(
-        new ApiResponse(201, 
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, OPTIONS)
+    .cookie("refreshToken", refreshToken, OPTIONS)
+    .json(
+        new ApiResponse(
+            200, 
             {
-            user : loggedInUser, accessToken, refreshToken
-        },
-        "User login is succefully"
+                user : loggedInUser, accessToken, refreshToken
+            },
+            "User logged In successfully"
+        )
     )
-     )
 })
 
 const logout = asyncHandler (async (req, res) => {
