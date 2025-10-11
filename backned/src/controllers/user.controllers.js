@@ -21,70 +21,89 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 }
 
-const register = asyncHandler (async (req, res) => {
-    // get all user details
-    // check it is valide
-    // check user is already register
-    // check image & avatar
-    // upload on cloudinary
-    // create a user 
-    // return res
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { User } from "../models/user.model.js";
+import { generateAccessAndRefreshToken } from "../utils/token.js"; // ✅ ensure you have this helper
 
-    const {fullName, username, email, password} = req.body
+export const register = asyncHandler(async (req, res) => {
+  const { fullName, username, email, password } = req.body;
 
-    if (
-        [fullName, email, username, password].some((field) => field?.trim() === "")
-    ) {
-        throw new ApiError(400, "All filed is required")
-    }
+  // 1️⃣ Validate input fields
+  if ([fullName, email, username, password].some((field) => !field?.trim())) {
+    throw new ApiError(400, "All fields are required");
+  }
 
-    const userAlready = await User.findOne({
-        $or : [{username}, {email}]
-    })
+  // 2️⃣ Check existing user
+  const existingUser = await User.findOne({
+    $or: [{ email }, { username }],
+  });
 
-    if (userAlready) {
-        throw new ApiError(400, "User is already register")
-    }
+  if (existingUser) {
+    throw new ApiError(400, "User already registered");
+  }
 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
-    
-    let coverImageLocalPath;
+  // 3️⃣ Handle file uploads
+  const avatarLocalPath = req.files?.avatar?.[0]?.path;
+  let coverImageLocalPath =
+    req.files?.coverImage?.[0]?.path || undefined;
 
-    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-        coverImageLocalPath = req.files.coverImage[0].path;
-    }
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar file is required");
+  }
 
-    if (!avatarLocalPath) {
-        throw new ApiError(400, "Avatar file is required")
-    }
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
-    const avatar = await uploadOnCloudinary(avatarLocalPath)
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+  if (!avatar) {
+    throw new ApiError(500, "Failed to upload avatar");
+  }
 
-    if (!avatar) {
-        throw new ApiError(500, "avatar file is Failed to upload")
-    }
+  // 4️⃣ Create user
+  const user = await User.create({
+    fullName,
+    username: username.toLowerCase(),
+    email,
+    password,
+    avatar: avatar.url,
+    coverImage: coverImage?.url || "",
+  });
 
-    const user = await User.create({
-        fullName,
-        username : username.toLowerCase(),
-        email,
-        password,
-        avatar : avatar.url,
-        coverImage :  coverImage?.url || "",
-    })
+  const createdUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
 
-     const createdUser = await User.findById(user._id).select("-password -refreshToken")
-    if (!createdUser) {
-        throw new ApiError(500, "Failed to create")
-    }
+  if (!createdUser) {
+    throw new ApiError(500, "Failed to create user");
+  }
 
-    return res
+  // 5️⃣ Generate tokens
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    createdUser._id
+  );
+
+  // 6️⃣ Send cookies (same as login)
+  const options = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  };
+
+  return res
     .status(201)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(
-        new ApiResponse(201, createdUser, "User created successfully")
-    )
-})
+      new ApiResponse(
+        201,
+        { user: createdUser, accessToken, refreshToken },
+        "User registered successfully"
+      )
+    );
+});
+
 
 const login = asyncHandler (async (req, res) => {
     // user details
@@ -118,7 +137,8 @@ const login = asyncHandler (async (req, res) => {
 
      const options = {
         httpOnly : true,
-        secure : true
+        secure : true,
+        sameSite : "none",
      }
 
      return res
