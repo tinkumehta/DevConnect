@@ -116,7 +116,7 @@ const login = asyncHandler(async (req, res) => {
         throw new ApiError(401, "User password is not correcty")
     }
 
-    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
+    const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id)
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
