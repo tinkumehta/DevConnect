@@ -89,7 +89,7 @@ const register = asyncHandler (async (req, res) => {
     )
 })
 
-const loginUser = asyncHandler(async (req, res) => {
+const login = asyncHandler(async (req, res) => {
     // req body -> username, email, password
     // find the user
     // check password
