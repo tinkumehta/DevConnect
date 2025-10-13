@@ -11,15 +11,15 @@ dotenv.config({
 
 // this is work on localhost i deploy this project they don't be need
 
-.then(() => {
-    app.listen(process.env.PORT || 8000 , () => {
-        console.log(`Server is running at port : ${process.env.PORT}`);
+// .then(() => {
+//     app.listen(process.env.PORT || 8000 , () => {
+//         console.log(`Server is running at port : ${process.env.PORT}`);
         
-    })
-})
-.catch((err) => {
-    console.log("Mongo db failed !!!", err);
+//     })
+// })
+// .catch((err) => {
+//     console.log("Mongo db failed !!!", err);
     
-})
+// })
 
 export default app;
