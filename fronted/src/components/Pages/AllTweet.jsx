@@ -57,24 +57,32 @@ const AllTweets = () => {
 };
 
 const TweetCard = ({ tweet }) => {
-  const [likesCount, setLikesCount] = useState(tweet.likeCount || 0);
+  const [likesCount, setLikesCount] = useState(tweet.likeCount);
   const [isLiked, setIsLiked] = useState(tweet.isLiked || false);
   const [animate, setAnimate] = useState(false);
-  //console.log(tweet);
-  
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
 
-  const handleLikeToggle = async () => {
-    try {
-      const res = await axios.post(`/api/v1/likes/toggle/t/${tweet._id}`);
-      const liked = res.data.data.likedBy;
-      setAnimate(true);
-      setTimeout(() => setAnimate(false), 300);
-      setIsLiked(liked);
-      setLikesCount((prev) => (liked ? prev + 1 : prev - 1));
-    } catch (err) {
-      console.error("Error toggling like:", err);
-    }
-  };
+ const handleLikeToggle = async () => {
+  if (isLoading) return;
+  
+  setIsLoading(true);
+  setAnimate(true);
+  
+  try {
+    const res = await axios.post(`/api/v1/likes/toggle/t/${tweet._id}`);
+    const { likedBy } = res.data.data;
+    
+    setIsLiked(likedBy);
+    setLikesCount(prev => likedBy ? prev + 1 : prev - 1);
+    
+    setTimeout(() => setAnimate(false), 300);
+  } catch (err) {
+    console.error("Error toggling like:", err);
+    setAnimate(false);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 p-5 border border-gray-100">
@@ -84,7 +92,6 @@ const TweetCard = ({ tweet }) => {
             src={tweet.ownerDetails?.avatar || ""} 
             alt="Profile" 
             className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
-           
           />
         </div>
         
@@ -112,9 +119,12 @@ const TweetCard = ({ tweet }) => {
           <div className="mt-4 flex items-center gap-6 text-gray-500">
             <button 
               onClick={handleLikeToggle}
+              disabled={isLoading} // Disable during loading
               className={`flex items-center gap-1 transition-all duration-200 ${
                 isLiked ? "text-red-500" : "hover:text-red-500"
-              } ${animate ? "scale-110" : "scale-100"}`}
+              } ${animate ? "scale-110" : "scale-100"} ${
+                isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+              }`}
             >
               <svg 
                 className={`w-5 h-5 ${isLiked ? "fill-current" : "stroke-current"}`} 

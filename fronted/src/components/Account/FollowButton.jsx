@@ -4,7 +4,7 @@ import axios from 'axios'
 // const API = import.meta.env.VITE_API_URL;
 
 function FollowButton({ targetUserId, onFollowChange}) {
-    const {user, SetUser} = useContext(AuthContext);
+    const {user, setUser} = useContext(AuthContext);
     const [loading, setLoading] = useState(false);
 
     const isFollowing = user?.following?.includes(targetUserId) || false;
@@ -13,7 +13,7 @@ function FollowButton({ targetUserId, onFollowChange}) {
         if (!user) return;
 
         // optimistic update
-         SetUser(prev => ({
+         setUser(prev => ({
       ...prev,
       following: isFollowing
         ? prev.following.filter(id => id !== targetUserId)
