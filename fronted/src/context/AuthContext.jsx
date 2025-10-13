@@ -9,16 +9,12 @@ export const AuthProvider = ({children}) => {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
-    // API base URL - use environment variable in production
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-
     const getCurrentUser = async () => {
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/v1/users/current-user`, {
+            const res = await axios.get('/api/v1/users/current-user', {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },
-                withCredentials: true,
             });
             
             if (res.data.success) {
@@ -42,14 +38,12 @@ export const AuthProvider = ({children}) => {
 
     const register = async (formData) => {
         try {
-            const res = await axios.post(`${API_BASE_URL}/api/v1/users/register`, formData, {
-                headers: { 
-                    'Content-Type': 'multipart/form-data' 
-                },
-                withCredentials: true,
+            const res = await axios.post('/api/v1/users/register', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
             });
             
             if (res.data.success) {
+                // Store the token if available in register response
                 if (res.data.data.accessToken) {
                     localStorage.setItem('token', res.data.data.accessToken);
                 }
@@ -63,15 +57,14 @@ export const AuthProvider = ({children}) => {
 
     const login = async (emailOrUsername, password) => {
         try {
-            const res = await axios.post(`${API_BASE_URL}/api/v1/users/login`, {
+            const res = await axios.post('/api/v1/users/login', {
                 email: emailOrUsername.includes('@') ? emailOrUsername : undefined,
                 username: !emailOrUsername.includes('@') ? emailOrUsername : undefined,
                 password,
-            }, {
-                withCredentials: true,
             });
 
             if (res.data.success) {
+                // Store the access token
                 localStorage.setItem('token', res.data.data.accessToken);
                 setUser(res.data.data.user);
                 navigate('/');
@@ -83,15 +76,15 @@ export const AuthProvider = ({children}) => {
 
     const logout = async () => {
         try {
-            await axios.post(`${API_BASE_URL}/api/v1/users/logout`, {}, {
+            await axios.post('/api/v1/users/logout', {}, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },
-                withCredentials: true,
             });
         } catch (error) {
             console.error('Logout API error', error);
         } finally {
+            // Always clear local state regardless of API call success
             setUser(null);
             localStorage.removeItem('token');
             navigate('/login');
@@ -120,4 +113,13 @@ export const AuthProvider = ({children}) => {
             {children}
         </AuthContext.Provider>
     );
+};
+
+// Custom hook for using auth context
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
 };
