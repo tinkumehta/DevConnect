@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   server : {
     proxy : {
-      '/api': 'https://dev-connect-109.vercel.app'
+      '/api': 'https://dev-connect-9o2l.vercel.app'
     }
   },
   plugins: [
