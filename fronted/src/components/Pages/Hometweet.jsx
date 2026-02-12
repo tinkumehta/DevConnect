@@ -3,6 +3,7 @@ import axios from "axios";
 import TweetCard from "./TweetCard";
 import TweetForm from "./TweetForm";
 import { AuthContext } from "../../context/AuthContext";
+import api from "../../context/configer";
 
 //const API = import.meta.env.VITE_API_URL;
 
@@ -14,7 +15,7 @@ function Hometweet() {
   const fetchTweets = async () => {
     try {
       const token = localStorage.getItem("token"); // ✅ get saved token
-      const res = await axios.get(`/api/v1/tweets/user/${user._id}`, {
+      const res = await api.get(`/tweets/user/${user._id}`, {
         headers: {
           Authorization: `Bearer ${token}`, // ✅ send token in header
         },

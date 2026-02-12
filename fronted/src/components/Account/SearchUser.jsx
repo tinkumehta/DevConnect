@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import FollowButton from './FollowButton'
 //const API = import.meta.env.VITE_API_URL;
+import api from '../../context/configer';
 
 function SearchUser() {
     const [query, setQuery] = useState("");
@@ -25,7 +26,7 @@ function SearchUser() {
         try {
           const token = localStorage.getItem("token");
             setIsLoading(true);
-            const res = await axios.get(`/api/v1/users/search?query=${query}`, {
+            const res = await api.get(`/users/search?query=${query}`, {
         headers: {
           Authorization: `Bearer ${token}`, // ✅ send token in header
         },

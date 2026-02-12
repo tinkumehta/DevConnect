@@ -2,13 +2,14 @@ import React, { useContext } from 'react'
 import axios from 'axios'
 import { AuthContext } from '../../context/AuthContext'
 // const API = import.meta.env.VITE_API_URL;
+import api from '../../context/configer';
 
 function TweetCard({tweet, onDelete, onEdit}) {
     const {user} = useContext(AuthContext);
     const handleDelete = async () => {
         try {
           const token = localStorage.getItem("token");
-            await axios.delete(`/api/v1/tweets/${tweet._id}`,{
+            await api.delete(`/tweets/${tweet._id}`,{
         headers: {
           Authorization: `Bearer ${token}`, // ✅ send token in header
         },

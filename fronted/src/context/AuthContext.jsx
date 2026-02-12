@@ -1,23 +1,20 @@
 import { useContext, createContext, useEffect, useState } from "react";
-import axios from 'axios'
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
+import api from "./configer"; // Use your axios instance
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({children}) => {
+export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     const getCurrentUser = async () => {
         try {
-            const res = await axios.get('/api/v1/users/current-user', {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-            });
+            const res = await api.get('/users/current-user'); // Use api instance
             
-            if (res.data.success) {
+            // Check based on your backend response structure
+            if (res.data && res.data.data) {
                 setUser(res.data.data);
             } else {
                 setUser(null);
@@ -38,55 +35,83 @@ export const AuthProvider = ({children}) => {
 
     const register = async (formData) => {
         try {
-            const res = await axios.post('/api/v1/users/register', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+            // Use FormData for file uploads
+            const res = await api.post('/users/register', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             });
             
-            if (res.data.success) {
-                // Store the token if available in register response
+            // Check your backend response structure
+            if (res.data && res.data.data) {
+                // Your backend returns tokens in data field
                 if (res.data.data.accessToken) {
                     localStorage.setItem('token', res.data.data.accessToken);
+                    // Update axios instance header
+                    api.defaults.headers.common['Authorization'] = `Bearer ${res.data.data.accessToken}`;
                 }
+                
+                // Set user from response
                 setUser(res.data.data.user || res.data.data);
                 navigate('/');
+                return { success: true, data: res.data };
             }
         } catch (error) {
-            throw error.response?.data?.message || "Registration failed";
+            console.error("Registration error:", error);
+            throw error.response?.data?.message || 
+                   error.response?.data?.data?.message || 
+                   "Registration failed";
         }
     };
 
     const login = async (emailOrUsername, password) => {
         try {
-            const res = await axios.post('/api/v1/users/login', {
-                email: emailOrUsername.includes('@') ? emailOrUsername : undefined,
-                username: !emailOrUsername.includes('@') ? emailOrUsername : undefined,
+            // Determine if input is email or username
+            const isEmail = emailOrUsername.includes('@');
+            const payload = {
                 password,
-            });
-
-            if (res.data.success) {
-                // Store the access token
-                localStorage.setItem('token', res.data.data.accessToken);
-                setUser(res.data.data.user);
-                navigate('/');
+            };
+            
+            if (isEmail) {
+                payload.email = emailOrUsername;
+            } else {
+                payload.username = emailOrUsername;
             }
-        } catch (err) {
-            throw err.response?.data?.message || "Login failed";
+
+            const res = await api.post('/users/login', payload);
+            
+            // Based on your backend response
+            if (res.data && res.data.data) {
+                // Store tokens
+                if (res.data.data.accessToken) {
+                    localStorage.setItem('token', res.data.data.accessToken);
+                    // Update axios instance header
+                    api.defaults.headers.common['Authorization'] = `Bearer ${res.data.data.accessToken}`;
+                }
+                
+                // Set user
+                setUser(res.data.data.user || res.data.data);
+                navigate('/');
+                return { success: true, data: res.data };
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            throw error.response?.data?.message || 
+                   error.response?.data?.data?.message || 
+                   "Login failed";
         }
     };
 
     const logout = async () => {
         try {
-            await axios.post('/api/v1/users/logout', {}, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-            });
+            await api.post('/users/logout');
         } catch (error) {
             console.error('Logout API error', error);
         } finally {
-            // Always clear local state regardless of API call success
+            // Clear everything
             setUser(null);
             localStorage.removeItem('token');
+            delete api.defaults.headers.common['Authorization'];
             navigate('/login');
         }
     };
@@ -94,6 +119,8 @@ export const AuthProvider = ({children}) => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
+            // Set token in axios headers
+            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             getCurrentUser();
         } else {
             setLoading(false);
@@ -110,12 +137,11 @@ export const AuthProvider = ({children}) => {
             register, 
             logout
         }}>
-            {children}
+            {!loading && children}
         </AuthContext.Provider>
     );
 };
 
-// Custom hook for using auth context
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {

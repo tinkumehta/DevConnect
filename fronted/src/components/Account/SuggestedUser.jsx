@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import React from 'react'
 //const API = import.meta.env.VITE_API_URL;
+import api from "../../context/configer";
 
 function SuggestedUser() {
     const [susggestios, setSuggestions] = useState([]);
@@ -11,7 +12,7 @@ function SuggestedUser() {
         const fetchSuggestions = async () => {
             try {
               const token = localStorage.getItem("token");
-                const res = await axios.get(`/api/v1/users/suggestions`, {
+                const res = await api.get(`/users/suggestions`, {
         headers: {
           Authorization: `Bearer ${token}`, // ✅ send token in header
         },
@@ -29,7 +30,7 @@ function SuggestedUser() {
 
     const handleFollow = async (id) => {
         try {
-            await axios.post(`${API}/api/v1/users/follow/${id}`);
+            await api.post(`/users/follow/${id}`);
             setSuggestions((prev) => prev.filter((user) => user._id !== id))
         } catch (error) {
             console.error("Error following user:", error)

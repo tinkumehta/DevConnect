@@ -1,7 +1,8 @@
 import React, { useContext, useState } from 'react'
 import { AuthContext } from '../../context/AuthContext'
-import axios from 'axios'
-// const API = import.meta.env.VITE_API_URL;
+
+import api from '../../context/configer';
+
 
 function FollowButton({ targetUserId, onFollowChange}) {
     const {user, setUser} = useContext(AuthContext);
@@ -24,14 +25,14 @@ function FollowButton({ targetUserId, onFollowChange}) {
         try {
             const token = localStorage.getItem("token");
             if (isFollowing) {
-                await axios.post(`/api/v1/users/unfollow/${targetUserId}`, {}, {
+                await api.post(`/users/unfollow/${targetUserId}`, {}, {
         headers: {
           Authorization: `Bearer ${token}`, // ✅ send token in header
         },
         withCredentials: true, // ✅ allow cross-origin auth
       });
             } else {
-                await axios.post(`/api/v1/users/follow/${targetUserId}`, {}, {
+                await api.post(`/users/follow/${targetUserId}`, {}, {
                     headers : {Authorization : `Bearer ${localStorage.getItem('token')}`}
                 });
             }

@@ -2,7 +2,8 @@ import axios from 'axios';
 import React from 'react'
 import { useEffect } from 'react';
 import { useState } from 'react'
-const API = import.meta.env.VITE_API_URL;
+
+import api from '../../context/configer';
 
 function TweetForm({onTweet, editingTweet, onCancel}) {
   const [content, setContent] = useState('');
@@ -16,7 +17,7 @@ function TweetForm({onTweet, editingTweet, onCancel}) {
     try {
       const token = localStorage.getItem("token");
       if (editingTweet) {
-        const res = await axios.patch(`/api/v1/tweets/${editingTweet._id}`, {content}, {
+        const res = await api.patch(`/tweets/${editingTweet._id}`, {content}, {
         headers: {
           Authorization: `Bearer ${token}`, // ✅ send token in header
         },
@@ -24,7 +25,7 @@ function TweetForm({onTweet, editingTweet, onCancel}) {
       });
         onTweet(res.data.data);
       } else{
-        const res = await axios.post(`/api/v1/tweets/`, {content}, {
+        const res = await api.post(`/tweets/`, {content}, {
         headers: {
           Authorization: `Bearer ${token}`, // ✅ send token in header
         },
