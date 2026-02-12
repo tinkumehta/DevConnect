@@ -6,13 +6,11 @@ import morgan from 'morgan'
 const app = express ()
 
 
-
-app.use(
-    cors({
-        origin : ['https://dev-connect-coral.vercel.app/api/v1', 'http://localhost:5173'],
-        credentials : true
-    })
-)
+//  {
+      //  origin : ['https://dev-connect-coral.vercel.app/api/v1', 'http://localhost:5173'],
+      //  credentials : true
+  //  }
+app.use(cors())
 
 app.use(express.json({limit : "25mb"}))
 app.use(express.urlencoded({extended : true, limit : "15mb"}))
