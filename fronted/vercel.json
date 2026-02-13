@@ -1,18 +1,4 @@
 {
-  
-  "builds": [
-    {
-      "src": "index.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["public/**"]
-      }
-    }
-  ],
-  "buildCommand": "mkdir -p public/temp && npm run build",
-
-
-
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ]
