@@ -3,13 +3,10 @@
   "builds": [
     {
       "src": "src/index.js",
-      "use": "@vercel/node",
-      "config" : {
-        "includeFiles" : ["public/**"]
-      }
+      "use": "@vercel/node"
     }
   ],
-  "buildCommand": "mkdir -p public/temp && npm run build",
+  "buildCommand": "npm run build",
   "routes": [
     {
       "src": "/(.*)",
@@ -40,4 +37,3 @@
     }
   ]
 }
-
