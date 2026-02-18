@@ -1,40 +1,40 @@
-import {v2 as cloudinary} from 'cloudinary'
-import fs from 'fs'
-import dotenv from "dotenv"
+// cloudinary.js - COMPLETE CLEAN VERSION
+import { v2 as cloudinary } from 'cloudinary'
 import streamifier from 'streamifier'
+import dotenv from "dotenv"
 
 dotenv.config()
 
 cloudinary.config({
-    cloud_name : process.env.CLOUDINARY_CLOUD_NAME,
-    api_key : process.env.CLOUDINARY_API_KEY,
-    api_secret : process.env.CLOUDINARY_API_SECRET
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
-//console.log(process.env.CLOUDINARY_API_KEY , "API KEY");
 
-
-// COMPLETELY REPLACE your existing uploadOnCloudinary function with this:
 export const uploadOnCloudinary = (file) => {
     return new Promise((resolve, reject) => {
-        if (!file) {
+        if (!file || !file.buffer) {
+            console.error("No file or buffer provided");
             return resolve(null);
         }
+
+        console.log("Uploading file to Cloudinary:", file.originalname);
 
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 resource_type: "auto",
-                folder: "dev-connect" // Optional
+                folder: "dev-connect"
             },
             (error, result) => {
                 if (error) {
-                    console.error("Cloudinary upload error:", error);
+                    console.error("Cloudinary upload error details:", error);
                     return reject(error);
                 }
+                console.log("Cloudinary upload success:", result?.url);
                 resolve(result);
             }
         );
 
-        // Create readable stream from file buffer and pipe to uploadStream
         streamifier.createReadStream(file.buffer).pipe(uploadStream);
     });
 };
