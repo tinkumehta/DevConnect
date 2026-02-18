@@ -21,71 +21,57 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 }
 
-const register = asyncHandler (async (req, res) => {
-    // get all user details for fronted
-    // validation - not empty
-    // check user already register
-    // check image and avatar 
-    // upload them to cloudinary , avatar
-    // create user object - create entery in db
-    // check user creation 
-    // return res
+const register = asyncHandler(async (req, res) => {
+    // get all user details from frontend
+    const { username, email, password, fullName } = req.body
 
-    const {username, email, password,  fullName} = req.body
-
-    if (
-        [username, email, password, fullName].some((field) => field?.trim() === "")
-    ) {
-        throw new  ApiError(401, "All field are required")
+    // validation
+    if ([username, email, password, fullName].some((field) => field?.trim() === "")) {
+        throw new ApiError(401, "All fields are required")
     }
 
     const existedUser = await User.findOne({
-        $or : [{username}, {email}]
+        $or: [{ username }, { email }]
     })
 
     if (existedUser) {
-        throw new ApiError(400, "User is allready exits")
+        throw new ApiError(400, "User already exists")
     }
 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
+    // CHANGE THIS PART - access files differently with memory storage
+    // Get the actual file objects from req.files (not .path)
+    const avatarFile = req.files?.avatar?.[0];
+    const coverImageFile = req.files?.coverImage?.[0];
 
-    let coverImageLocalPath;
-
-    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-        coverImageLocalPath = req.files.coverImage[0].path;
-    }
-
-    if (!avatarLocalPath) {
+    if (!avatarFile) {
         throw new ApiError(401, "Avatar file is required")
     }
 
-    const avatar = await uploadOnCloudinary(avatarLocalPath)
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+    // Upload to Cloudinary - pass the file objects directly
+    const avatar = await uploadOnCloudinary(avatarFile)
+    const coverImage = await uploadOnCloudinary(coverImageFile)
 
     if (!avatar) {
-        throw new ApiError(500, "Failed to upload")
+        throw new ApiError(500, "Failed to upload avatar")
     }
 
     const user = await User.create({
         fullName,
-        username : username.toLowerCase(),
+        username: username.toLowerCase(),
         email,
         password,
-        avatar : avatar.url,
-        coverImage : coverImage?.url || "",
+        avatar: avatar.url,
+        coverImage: coverImage?.url || "",
     })
 
     const createdUser = await User.findById(user._id).select("-password -refreshToken")
 
     if (!createdUser) {
-        throw new ApiError(500, "Something went wrong for register user")
+        throw new ApiError(500, "Something went wrong registering user")
     }
 
-   
-   return res
-    .status(200)
-    .json(
-        new ApiResponse(200, createdUser, "User created successfully")
+    return res.status(201).json(
+        new ApiResponse(201, createdUser, "User created successfully")
     )
 })
 

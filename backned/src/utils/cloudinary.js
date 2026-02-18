@@ -1,6 +1,7 @@
 import {v2 as cloudinary} from 'cloudinary'
 import fs from 'fs'
 import dotenv from "dotenv"
+import streamifier from 'streamifier'
 
 dotenv.config()
 
@@ -12,17 +13,28 @@ cloudinary.config({
 //console.log(process.env.CLOUDINARY_API_KEY , "API KEY");
 
 
-export const uploadOnCloudinary = async (localFilePath) => {
-    try {
-        if (!localFilePath) return null;
-        const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type : "auto"
-        })
-        // console.log("File url", response.url)
-        fs.unlinkSync(localFilePath)
-        return response
-    } catch (error) {
-        fs.unlinkSync(localFilePath) // remove the file in locally saved
-        return null
-    }
-}
+// COMPLETELY REPLACE your existing uploadOnCloudinary function with this:
+export const uploadOnCloudinary = (file) => {
+    return new Promise((resolve, reject) => {
+        if (!file) {
+            return resolve(null);
+        }
+
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                resource_type: "auto",
+                folder: "dev-connect" // Optional
+            },
+            (error, result) => {
+                if (error) {
+                    console.error("Cloudinary upload error:", error);
+                    return reject(error);
+                }
+                resolve(result);
+            }
+        );
+
+        // Create readable stream from file buffer and pipe to uploadStream
+        streamifier.createReadStream(file.buffer).pipe(uploadStream);
+    });
+};
