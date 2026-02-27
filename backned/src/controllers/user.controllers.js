@@ -22,10 +22,6 @@ const generateAccessAndRefreshToken = async (userId) => {
 }
 
 const register = asyncHandler(async (req, res) => {
-    try {
-        console.log("=== REGISTRATION STARTED ===");
-        console.log("Request body:", { ...req.body, password: '[REDACTED]' });
-        console.log("Files received:", req.files ? Object.keys(req.files) : 'No files');
 
         const { username, email, password, fullName } = req.body
 
@@ -42,40 +38,30 @@ const register = asyncHandler(async (req, res) => {
             throw new ApiError(400, "User already exists")
         }
 
-        // Check files
-        const avatarFile = req.files?.avatar?.[0];
-        const coverImageFile = req.files?.coverImage?.[0];
-
-        console.log("Avatar file:", avatarFile ? {
-            originalname: avatarFile.originalname,
-            mimetype: avatarFile.mimetype,
-            size: avatarFile.size,
-            hasBuffer: !!avatarFile.buffer
-        } : 'No avatar file');
+           // CHANGE THIS PART - access files differently with memory storage
+    // Get the actual file objects from req.files (not .path)
+    const avatarFile = req.files?.avatar?.[0];
+    const coverImageFile = req.files?.coverImage?.[0];
 
         if (!avatarFile) {
             throw new ApiError(401, "Avatar file is required")
         }
 
-        if (!avatarFile.buffer) {
-            throw new ApiError(500, "Avatar file buffer is missing")
-        }
+        // Upload to Cloudinary - pass the file objects directly
+    const avatar = await uploadOnCloudinary(avatarFile)
+    const coverImage = await uploadOnCloudinary(coverImageFile)
 
         // Upload to Cloudinary
-        console.log("Uploading avatar to Cloudinary...");
-        const avatar = await uploadOnCloudinary(avatarFile)
-        
-        console.log("Avatar upload result:", avatar ? 'Success' : 'Failed');
-        
+       
         if (!avatar) {
             throw new ApiError(500, "Failed to upload avatar")
         }
 
-        console.log("Uploading cover image to Cloudinary...");
-        const coverImage = coverImageFile ? await uploadOnCloudinary(coverImageFile) : null;
+        
+        
 
         // Create user
-        console.log("Creating user in database...");
+       
         const user = await User.create({
             fullName,
             username: username.toLowerCase(),
@@ -91,19 +77,12 @@ const register = asyncHandler(async (req, res) => {
             throw new ApiError(500, "Something went wrong registering user")
         }
 
-        console.log("User created successfully:", createdUser._id);
-        console.log("=== REGISTRATION COMPLETED ===");
+       
 
         return res.status(201).json(
             new ApiResponse(201, createdUser, "User created successfully")
         )
-    } catch (error) {
-        console.error("=== REGISTRATION ERROR ===");
-        console.error("Error name:", error.name);
-        console.error("Error message:", error.message);
-        console.error("Error stack:", error.stack);
-        throw error;
-    }
+   
 })
 
 const login = asyncHandler(async (req, res) => {
