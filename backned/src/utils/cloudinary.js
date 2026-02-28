@@ -15,7 +15,7 @@ cloudinary.config({
 export const uploadOnCloudinary = (file) => {
     return new Promise((resolve, reject) => {
         if (!file || !file.buffer) {
-            console.error("No file or buffer provided");
+          //  console.error("No file or buffer provided");
             return resolve(null);
         }
 
@@ -28,10 +28,10 @@ export const uploadOnCloudinary = (file) => {
             },
             (error, result) => {
                 if (error) {
-                    console.error("Cloudinary upload error details:", error);
+               //     console.error("Cloudinary upload error details:", error);
                     return reject(error);
                 }
-                console.log("Cloudinary upload success:", result?.url);
+               // console.log("Cloudinary upload success:", result?.url);
                 resolve(result);
             }
         );
